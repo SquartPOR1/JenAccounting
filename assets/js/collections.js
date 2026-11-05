@@ -4,6 +4,8 @@
   const byId = (id) => document.getElementById(id);
 
   function render() {
+    const table = byId("collections-table");
+    if (!table) return;
     const query = byId("collection-search").value.trim().toLowerCase();
     const method = byId("collection-method-filter").value;
     const from = byId("collection-from").value;
@@ -17,7 +19,7 @@
     byId("collection-count").textContent = String(state.collections.length);
     byId("collection-average").textContent = A.money(state.collections.length ? A.sum(state.collections) / state.collections.length : 0);
     byId("collection-visible-count").textContent = `${records.length} shown · ${A.money(amount)}`;
-    byId("collections-table").innerHTML = records.map((item) => `<tr><td><span class="transaction-primary">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(A.memberName(item.memberId))}<span class="member-id">${A.escapeHtml(item.memberId)}</span></td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.escapeHtml(item.method)}</td><td>${A.escapeHtml(item.receipt)}</td><td class="align-right">${A.money(item.amount)}</td><td class="align-right"><button class="button-link" data-action="view-receipt" data-id="${A.escapeHtml(item.id)}">Preview</button></td></tr>`).join("");
+    table.innerHTML = records.map((item) => `<tr><td><span class="transaction-primary">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(A.memberName(item.memberId))}<span class="member-id">${A.escapeHtml(item.memberId)}</span></td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.escapeHtml(item.method)}</td><td>${A.escapeHtml(item.receipt)}</td><td class="align-right">${A.money(item.amount)}</td><td class="align-right"><button class="button-link" data-action="view-receipt" data-id="${A.escapeHtml(item.id)}">Preview</button></td></tr>`).join("");
     byId("collections-empty").classList.toggle("hidden", records.length > 0);
   }
 
@@ -73,7 +75,12 @@
       if (item) previewReceipt(item);
     }
   });
-  ["collection-search", "collection-method-filter", "collection-from", "collection-to"].forEach((id) => byId(id).addEventListener("input", render));
-  ["collection-method-filter", "collection-from", "collection-to"].forEach((id) => byId(id).addEventListener("change", render));
+  document.addEventListener("input", (event) => {
+    if (["collection-search", "collection-method-filter", "collection-from", "collection-to"].includes(event.target?.id)) render();
+  });
+  document.addEventListener("change", (event) => {
+    if (["collection-method-filter", "collection-from", "collection-to"].includes(event.target?.id)) render();
+  });
+  A.pages.collections = { render };
   A.ready.then(render);
 })();

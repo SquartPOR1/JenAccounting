@@ -190,6 +190,7 @@
   window.Accounting = {
     get state() { return state; },
     get backendAvailable() { return backendAvailable; },
+    pages: {},
     ready: null,
     save,
     money,

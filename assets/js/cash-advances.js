@@ -11,6 +11,8 @@
   }
 
   function render() {
+    const table = byId("advances-table");
+    if (!table) return;
     const query = byId("advance-search").value.trim().toLowerCase();
     const filter = byId("advance-filter").value;
     const records = [...state.advances].filter((advance) => {
@@ -23,7 +25,7 @@
     byId("advance-outstanding").textContent = A.money(outstanding);
     byId("advance-returned").textContent = A.money(A.sum(state.advances, (item) => item.returned));
     byId("advance-count").textContent = `${records.length} of ${state.advances.length} advances`;
-    byId("advances-table").innerHTML = records.map((item) => {
+    table.innerHTML = records.map((item) => {
       const status = accountability(item);
       return `<tr><td><span class="transaction-primary">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(item.purpose)}</td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.money(item.amount)}</td><td>${A.money(item.actualExpenses)}</td><td class="text-green">${A.money(item.returned)}</td><td><span class="status status-${status.status.toLowerCase()}">${status.status}${status.amount ? ` · ${A.money(status.amount)} due` : ""}</span></td><td><span class="table-actions"><button class="icon-button" data-action="edit-advance" data-id="${A.escapeHtml(item.id)}" aria-label="Update ${A.escapeHtml(item.purpose)}">Update</button><button class="icon-button danger" data-action="delete-advance" data-id="${A.escapeHtml(item.id)}" aria-label="Delete ${A.escapeHtml(item.purpose)}">Delete</button></span></td></tr>`;
     }).join("");
@@ -81,7 +83,8 @@
       if (saved) A.toast("Cash advance deleted.");
     }
   });
-  byId("advance-search").addEventListener("input", render);
-  byId("advance-filter").addEventListener("change", render);
+  document.addEventListener("input", (event) => { if (event.target?.id === "advance-search") render(); });
+  document.addEventListener("change", (event) => { if (event.target?.id === "advance-filter") render(); });
+  A.pages["cash-advances"] = { render };
   A.ready.then(render);
 })();

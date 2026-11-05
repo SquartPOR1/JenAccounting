@@ -23,7 +23,17 @@
     }).join("");
   }
 
+  const tick = () => {
+    const label = byId("today-label");
+    if (!label) return;
+    label.textContent = new Date().toLocaleString("en-PH", {
+      weekday: "short", month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true,
+    });
+  };
+
   function render() {
+    if (!byId("metric-assessed")) return;
     const state = A.state;
     const totals = A.totals();
     const allMetrics = {
@@ -35,9 +45,10 @@
     };
     Object.entries(allMetrics).forEach(([id, value]) => { if (byId(id)) byId(id).textContent = A.money(value); });
     byId("collection-rate").textContent = `${totals.assessed ? Math.round((totals.collected / totals.assessed) * 100) : 0}% of assessed fees collected`;
-    document.querySelector(".metric-foot span:last-child").textContent = `${state.members.length} members registered`;
-    const now = new Date();
-    byId("today-label").textContent = now.toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    const membersFoot = document.querySelector(".dashboard-metrics .metric-foot span:last-child");
+    if (membersFoot) membersFoot.textContent = `${state.members.length} members registered`;
+    tick();
+    if (!window.__ledgerlyClock) window.__ledgerlyClock = window.setInterval(tick, 1000);
 
     renderChart("collection-chart", state.collections);
     renderChart("expense-chart", [
@@ -53,5 +64,6 @@
     }).join("") : `<tr><td colspan="5" class="empty-state">No collections recorded yet.</td></tr>`;
   }
 
+  A.pages.dashboard = { render };
   A.ready.then(render);
 })();

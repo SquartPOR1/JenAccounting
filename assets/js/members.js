@@ -2,7 +2,6 @@
   const A = window.Accounting;
   const state = A.state;
   const byId = (id) => document.getElementById(id);
-  const table = byId("members-table");
 
   function memberStatus(member) {
     const assessments = state.assessments.filter((item) => item.memberId === member.id);
@@ -11,7 +10,10 @@
   }
 
   function render() {
-    const query = byId("member-search").value.trim().toLowerCase();
+    const search = byId("member-search");
+    const table = byId("members-table");
+    if (!search || !table) return;
+    const query = search.value.trim().toLowerCase();
     const statusFilter = byId("member-status-filter").value;
     const members = state.members.filter((member) => {
       const status = memberStatus(member);
@@ -72,7 +74,8 @@
       if (saved) A.toast("Member removed. Historical transactions were retained.");
     }
   });
-  byId("member-search").addEventListener("input", render);
-  byId("member-status-filter").addEventListener("change", render);
+  document.addEventListener("input", (event) => { if (event.target?.id === "member-search") render(); });
+  document.addEventListener("change", (event) => { if (event.target?.id === "member-status-filter") render(); });
+  A.pages.members = { render };
   A.ready.then(render);
 })();

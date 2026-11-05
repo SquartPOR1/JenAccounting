@@ -3,10 +3,10 @@
   const state = A.state;
   const byId = (id) => document.getElementById(id);
   const today = new Date();
-  byId("report-month").value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
   function controls() {
-    const view = byId("report-view").value;
+    const view = byId("report-view")?.value;
+    if (!view) return;
     const period = byId("period-label");
     const month = byId("report-month");
     const custom = view === "custom";
@@ -29,7 +29,7 @@
   }
 
   function dateRange() {
-    const view = byId("report-view").value;
+    const view = byId("report-view")?.value || "monthly";
     if (view === "custom") {
       return { from: byId("report-from").value || "0000-01-01", to: byId("report-to").value || "9999-12-31", label: "Custom date range" };
     }
@@ -44,6 +44,8 @@
   }
 
   function render() {
+    if (!byId("report-assessed")) return;
+    controls();
     const range = dateRange();
     if (range.from > range.to) {
       A.toast("The report start date must be before its end date.", "error");
@@ -112,16 +114,23 @@
     A.toast("Financial summary exported as CSV.");
   }
 
-  byId("report-view").addEventListener("change", () => { controls(); render(); });
-  byId("report-month").addEventListener("change", render);
-  byId("apply-report").addEventListener("click", render);
-  byId("report-from").addEventListener("change", render);
-  byId("report-to").addEventListener("change", render);
+  document.addEventListener("change", (event) => {
+    if (event.target?.id === "report-view") { controls(); render(); }
+    if (["report-month", "report-from", "report-to"].includes(event.target?.id)) render();
+  });
   document.addEventListener("click", (event) => {
     const action = event.target.closest("[data-action]")?.dataset.action;
-    if (action === "print-report") window.print();
-    if (action === "export-report") exportReport();
+    if (action === "print-report" && byId("report-assessed")) window.print();
+    if (action === "export-report" && byId("report-assessed")) exportReport();
+    if (event.target?.id === "apply-report" && byId("report-assessed")) render();
   });
-  controls();
-  A.ready.then(render);
+  A.pages.reports = {
+    render() {
+      const month = byId("report-month");
+      if (month && !month.value) month.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      controls();
+      render();
+    },
+  };
+  A.ready.then(() => A.pages.reports.render());
 })();

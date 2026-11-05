@@ -6,6 +6,8 @@
   const maxFileSize = 2 * 1024 * 1024;
 
   function render() {
+    const table = byId("expenses-table");
+    if (!table) return;
     const query = byId("expense-search").value.trim().toLowerCase();
     const category = byId("expense-category-filter").value;
     const records = [...state.expenses].filter((item) =>
@@ -15,7 +17,7 @@
     byId("expense-direct").textContent = A.money(A.totals().directExpenses);
     byId("expense-documents").textContent = String(state.expenses.filter((item) => item.document?.name).length);
     byId("expense-count").textContent = `${records.length} of ${state.expenses.length} direct expenses`;
-    byId("expenses-table").innerHTML = records.map((item) => `<tr><td><span class="transaction-primary">${A.escapeHtml(item.description)}</span><span class="member-id">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(item.category)}</td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.escapeHtml(item.recordedBy)}</td><td>${item.document?.name ? `<button class="button-link" data-action="view-document" data-id="${A.escapeHtml(item.id)}">${A.escapeHtml(item.document.name)}</button>` : '<span class="muted">—</span>'}</td><td class="align-right">${A.money(item.amount)}</td><td><span class="table-actions"><button class="icon-button" data-action="edit-expense" data-id="${A.escapeHtml(item.id)}" aria-label="Edit ${A.escapeHtml(item.description)}">Edit</button><button class="icon-button danger" data-action="delete-expense" data-id="${A.escapeHtml(item.id)}" aria-label="Delete ${A.escapeHtml(item.description)}">Delete</button></span></td></tr>`).join("");
+    table.innerHTML = records.map((item) => `<tr><td><span class="transaction-primary">${A.escapeHtml(item.description)}</span><span class="member-id">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(item.category)}</td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.escapeHtml(item.recordedBy)}</td><td>${item.document?.name ? `<button class="button-link" data-action="view-document" data-id="${A.escapeHtml(item.id)}">${A.escapeHtml(item.document.name)}</button>` : '<span class="muted">—</span>'}</td><td class="align-right">${A.money(item.amount)}</td><td><span class="table-actions"><button class="icon-button" data-action="edit-expense" data-id="${A.escapeHtml(item.id)}" aria-label="Edit ${A.escapeHtml(item.description)}">Edit</button><button class="icon-button danger" data-action="delete-expense" data-id="${A.escapeHtml(item.id)}" aria-label="Delete ${A.escapeHtml(item.description)}">Delete</button></span></td></tr>`).join("");
     byId("expenses-empty").classList.toggle("hidden", records.length > 0);
   }
 
@@ -113,7 +115,8 @@
       if (saved) A.toast("Expense deleted.");
     }
   });
-  byId("expense-search").addEventListener("input", render);
-  byId("expense-category-filter").addEventListener("change", render);
+  document.addEventListener("input", (event) => { if (event.target?.id === "expense-search") render(); });
+  document.addEventListener("change", (event) => { if (event.target?.id === "expense-category-filter") render(); });
+  A.pages.expenses = { render };
   A.ready.then(render);
 })();

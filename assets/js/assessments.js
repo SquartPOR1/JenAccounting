@@ -11,6 +11,8 @@
   }
 
   function render() {
+    const table = byId("assessments-table");
+    if (!table) return;
     const totals = A.totals();
     byId("assessment-total").textContent = A.money(totals.assessed);
     byId("assessment-paid").textContent = A.money(totals.collected);
@@ -22,7 +24,7 @@
       return (!filter || status === filter) && `${item.id} ${A.memberName(item.memberId)}`.toLowerCase().includes(query);
     });
     byId("assessment-count").textContent = `${records.length} of ${state.assessments.length} assessments`;
-    byId("assessments-table").innerHTML = records.map((item) => {
+    table.innerHTML = records.map((item) => {
       const details = paymentStatus(item);
       return `<tr><td><span class="transaction-primary">${A.escapeHtml(item.id)}</span></td><td>${A.escapeHtml(A.memberName(item.memberId))}<span class="member-id">${A.escapeHtml(item.memberId)}</span></td><td>${new Date(`${item.date}T12:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}</td><td>${A.money(item.amount)}</td><td>${A.money(details.paid)}</td><td class="${details.due ? "text-amber" : "text-green"}">${A.money(details.due)}</td><td><span class="status status-${details.status.toLowerCase()}">${details.status}</span></td></tr>`;
     }).join("");
@@ -64,7 +66,8 @@
   document.addEventListener("click", (event) => {
     if (event.target.closest("[data-action='assess-fees']")) assessForm();
   });
-  byId("assessment-search").addEventListener("input", render);
-  byId("assessment-filter").addEventListener("change", render);
+  document.addEventListener("input", (event) => { if (event.target?.id === "assessment-search") render(); });
+  document.addEventListener("change", (event) => { if (event.target?.id === "assessment-filter") render(); });
+  A.pages.assessments = { render };
   A.ready.then(render);
 })();

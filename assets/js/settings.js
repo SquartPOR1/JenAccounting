@@ -1,14 +1,19 @@
 (() => {
   const A = window.Accounting;
-  const form = document.getElementById("organization-form");
   const fillForm = () => {
+    const form = document.getElementById("organization-form");
+    if (!form) return;
     form.elements.organization.value = A.state.organization || "";
     form.elements.fee.value = Number(A.state.defaultFee ?? 0);
-    document.getElementById("member-record-count").textContent = String(A.state.members.length);
+    const count = document.getElementById("member-record-count");
+    if (count) count.textContent = String(A.state.members.length);
   };
+  A.pages.settings = { render: fillForm };
   A.ready.then(fillForm);
-  form.addEventListener("submit", async (event) => {
+  document.addEventListener("submit", async (event) => {
+    if (event.target?.id !== "organization-form") return;
     event.preventDefault();
+    const form = event.target;
     if (!form.reportValidity()) return;
     A.state.organization = form.elements.organization.value.trim();
     A.state.defaultFee = Number(form.elements.fee.value);
