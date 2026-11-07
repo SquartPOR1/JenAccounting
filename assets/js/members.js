@@ -5,8 +5,9 @@
 
   function memberStatus(member) {
     const assessments = state.assessments.filter((item) => item.memberId === member.id);
-    if (!assessments.length) return "Unpaid";
-    return A.statusFor(A.sum(assessments), A.paymentFor(member.id));
+    const paid = A.paymentFor(member.id);
+    if (!assessments.length) return paid > 0 ? "Paid" : "Unpaid";
+    return A.statusFor(A.sum(assessments), paid);
   }
 
   function render() {

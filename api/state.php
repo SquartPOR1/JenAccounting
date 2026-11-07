@@ -81,6 +81,12 @@ function validateRecords(mixed $records, string $type): void
                 if (!in_array($record['method'] ?? null, ['Cash', 'GCash', 'Bank transfer'], true)) {
                     throw new InvalidArgumentException('Invalid collection method.');
                 }
+                if (isset($record['bank']) && !in_array($record['bank'], ['BDO', 'BPI'], true)) {
+                    throw new InvalidArgumentException('Invalid bank transfer destination.');
+                }
+                if (isset($record['transferReference']) && (!is_string($record['transferReference']) || trim($record['transferReference']) === '' || strlen($record['transferReference']) > 120)) {
+                    throw new InvalidArgumentException('Invalid transfer reference.');
+                }
                 break;
             case 'expenses':
                 requireString($record, 'description', 240);
@@ -129,6 +135,36 @@ function validateDocument(mixed $document): void
     }
 }
 
+function validatePaymentInfo(mixed $paymentInfo): void
+{
+    if ($paymentInfo === null) {
+        return;
+    }
+    if (!is_array($paymentInfo)) {
+        throw new InvalidArgumentException('Invalid payment instructions.');
+    }
+
+    foreach (['gcash', 'bdo', 'bpi'] as $method) {
+        $account = $paymentInfo[$method] ?? [];
+        if (!is_array($account)) {
+            throw new InvalidArgumentException('Invalid payment account details.');
+        }
+        foreach (['name' => 120, 'number' => 80] as $key => $maxLength) {
+            $value = $account[$key] ?? '';
+            if (!is_string($value) || strlen($value) > $maxLength) {
+                throw new InvalidArgumentException('Invalid payment account details.');
+            }
+        }
+        if ($method === 'gcash' && isset($account['qr'])) {
+            $qr = $account['qr'];
+            if (!is_array($qr) || !in_array($qr['type'] ?? null, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                throw new InvalidArgumentException('Invalid GCash QR image.');
+            }
+            validateDocument($qr);
+        }
+    }
+}
+
 try {
     $configPath = __DIR__ . '/config.php';
     if (!is_file($configPath)) {
@@ -170,6 +206,7 @@ try {
     }
     requireString($state, 'organization', 240);
     requireAmount($state, 'defaultFee');
+    validatePaymentInfo($state['paymentInfo'] ?? null);
     $payload = json_encode($state, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
 
     $pdo->beginTransaction();

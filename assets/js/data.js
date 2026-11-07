@@ -8,6 +8,11 @@
       collections: [],
       expenses: [],
       advances: [],
+      paymentInfo: {
+        gcash: { name: "", number: "", qr: null },
+        bdo: { name: "", number: "" },
+        bpi: { name: "", number: "" },
+      },
     };
   }
 
@@ -59,6 +64,14 @@
   function replaceState(next) {
     if (next === state) return;
     const replacement = { ...next };
+    const defaults = createEmptyState().paymentInfo;
+    replacement.paymentInfo = {
+      ...defaults,
+      ...next.paymentInfo,
+      gcash: { ...defaults.gcash, ...next.paymentInfo?.gcash },
+      bdo: { ...defaults.bdo, ...next.paymentInfo?.bdo },
+      bpi: { ...defaults.bpi, ...next.paymentInfo?.bpi },
+    };
     Object.keys(state).forEach((key) => delete state[key]);
     Object.assign(state, replacement);
   }

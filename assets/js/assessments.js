@@ -7,7 +7,9 @@
     const memberAssessments = state.assessments.filter((item) => item.memberId === assessment.memberId);
     const totalAssessed = A.sum(memberAssessments);
     const paid = A.paymentFor(assessment.memberId);
-    return { paid: Math.min(Number(assessment.amount), Math.max(0, paid - (totalAssessed - Number(assessment.amount)))), due: Math.max(0, Number(assessment.amount) - paid), status: A.statusFor(totalAssessed, paid) };
+    const paidForAssessment = Math.min(Number(assessment.amount), Math.max(0, paid - (totalAssessed - Number(assessment.amount))));
+    const due = Math.max(0, Number(assessment.amount) - paidForAssessment);
+    return { paid: paidForAssessment, due, status: A.statusFor(Number(assessment.amount), paidForAssessment) };
   }
 
   function render() {
